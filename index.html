@@ -1,1 +1,530 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Caixa</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+  :root {
+    --bg: #0d0f0e;
+    --surface: #151918;
+    --surface2: #1c211f;
+    --border: #2a3330;
+    --accent: #00e5a0;
+    --accent-dim: #00b37d;
+    --accent-glow: rgba(0,229,160,0.12);
+    --red: #ff4f6a;
+    --red-dim: #cc3a52;
+    --red-glow: rgba(255,79,106,0.12);
+    --text: #e8f0ec;
+    --muted: #667a72;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    background-image: radial-gradient(ellipse at 20% 0%, rgba(0,229,160,0.06) 0%, transparent 50%),
+                      radial-gradient(ellipse at 80% 100%, rgba(0,100,60,0.05) 0%, transparent 50%);
+  }
+
+  header {
+    max-width: 900px;
+    margin: 0 auto 2.5rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1.5rem;
+    animation: fadeDown 0.5s ease both;
+  }
+
+  .brand { line-height: 1; }
+  .brand-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+  .brand-title {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    color: var(--text);
+  }
+  .brand-title span { color: var(--accent); }
+
+  .date-badge {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 0.4rem 0.9rem;
+    border-radius: 100px;
+  }
+
+  /* Summary cards */
+  .summary {
+    max-width: 900px;
+    margin: 0 auto 2rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    animation: fadeDown 0.5s 0.1s ease both;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .card:hover { border-color: #3a4d47; }
+  .card-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.6rem;
+  }
+  .card-value {
+    font-family: var(--mono);
+    font-size: 1.6rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+  .card.green .card-value { color: var(--accent); }
+  .card.red   .card-value { color: var(--red); }
+  .card.bal .card-value   { color: var(--text); }
+  .card-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+    margin-top: -2px;
+  }
+  .card.green .card-dot { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .card.red   .card-dot { background: var(--red);    box-shadow: 0 0 8px var(--red); }
+  .card.bal   .card-dot { background: var(--text); }
+
+  /* Form */
+  .form-wrap {
+    max-width: 900px;
+    margin: 0 auto 2rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.5rem;
+    animation: fadeDown 0.5s 0.2s ease both;
+  }
+  .form-title {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1.2rem;
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 0.75rem;
+    align-items: end;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 0.4rem; }
+  label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  input, select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    padding: 0.65rem 0.9rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+  input::placeholder { color: var(--muted); }
+  input:focus, select:focus {
+    border-color: var(--accent-dim);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  select option { background: #1c211f; }
+
+  .btn-add {
+    background: var(--accent);
+    color: #061a12;
+    border: none;
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.03em;
+    padding: 0.65rem 1.5rem;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    white-space: nowrap;
+    height: 40px;
+  }
+  .btn-add:hover {
+    background: #00ffb3;
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+  .btn-add:active { transform: scale(0.97); }
+
+  /* Transactions */
+  .list-wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    animation: fadeDown 0.5s 0.3s ease both;
+  }
+  .list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  .list-title {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .btn-clear {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.3rem 0.8rem;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .btn-clear:hover { color: var(--red); border-color: var(--red-dim); }
+
+  #transaction-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .tx-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 1.1rem;
+    transition: border-color 0.2s, transform 0.15s;
+    animation: slideIn 0.25s ease both;
+  }
+  .tx-item:hover { border-color: #3a4d47; transform: translateX(2px); }
+
+  .tx-badge {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+  }
+  .tx-badge.entrada { background: rgba(0,229,160,0.12); color: var(--accent); }
+  .tx-badge.saida   { background: rgba(255,79,106,0.12); color: var(--red); }
+
+  .tx-desc {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tx-meta {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .tx-amount {
+    font-family: var(--mono);
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-align: right;
+  }
+  .tx-amount.entrada { color: var(--accent); }
+  .tx-amount.saida   { color: var(--red); }
+
+  .btn-del {
+    background: none;
+    border: none;
+    color: var(--border);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: color 0.2s;
+    line-height: 1;
+  }
+  .btn-del:hover { color: var(--red); }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+  }
+  .empty-icon { font-size: 2rem; margin-bottom: 0.75rem; display: block; }
+
+  /* Filter row */
+  .filter-row {
+    max-width: 900px;
+    margin: 0 auto 1rem;
+    display: flex;
+    gap: 0.5rem;
+    animation: fadeDown 0.5s 0.25s ease both;
+  }
+  .filter-btn {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.35rem 0.9rem;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .filter-btn.active { background: var(--surface2); border-color: var(--accent-dim); color: var(--accent); }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-12px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  @media (max-width: 640px) {
+    .summary { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr 1fr; }
+    .form-grid .btn-add { grid-column: 1/-1; width: 100%; }
+    .form-grid .field:last-of-type { grid-column: 1/-1; }
+    header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+    .tx-item { grid-template-columns: auto 1fr auto auto; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-label">Sistema financeiro</div>
+    <div class="brand-title">Controle de <span>Caixa</span></div>
+  </div>
+  <div class="date-badge" id="date-badge"></div>
+</header>
+
+<!-- Summary -->
+<div class="summary">
+  <div class="card green">
+    <div class="card-label">Entradas</div>
+    <div class="card-value"><span class="card-dot"></span><span id="total-entrada">R$ 0,00</span></div>
+  </div>
+  <div class="card red">
+    <div class="card-label">Saídas</div>
+    <div class="card-value"><span class="card-dot"></span><span id="total-saida">R$ 0,00</span></div>
+  </div>
+  <div class="card bal">
+    <div class="card-label">Saldo atual</div>
+    <div class="card-value" id="saldo-wrap"><span class="card-dot"></span><span id="saldo">R$ 0,00</span></div>
+  </div>
+</div>
+
+<!-- Form -->
+<div class="form-wrap">
+  <div class="form-title">Nova transação</div>
+  <div class="form-grid">
+    <div class="field">
+      <label for="desc">Descrição</label>
+      <input type="text" id="desc" placeholder="Ex: Venda de produto">
+    </div>
+    <div class="field">
+      <label for="valor">Valor (R$)</label>
+      <input type="number" id="valor" placeholder="0,00" min="0" step="0.01">
+    </div>
+    <div class="field">
+      <label for="tipo">Tipo</label>
+      <select id="tipo">
+        <option value="entrada">↑ Entrada</option>
+        <option value="saida">↓ Saída</option>
+      </select>
+    </div>
+    <button class="btn-add" onclick="addTransaction()">+ Adicionar</button>
+  </div>
+</div>
+
+<!-- Filter -->
+<div class="filter-row">
+  <button class="filter-btn active" onclick="setFilter('todos', this)">Todos</button>
+  <button class="filter-btn" onclick="setFilter('entrada', this)">Entradas</button>
+  <button class="filter-btn" onclick="setFilter('saida', this)">Saídas</button>
+</div>
+
+<!-- List -->
+<div class="list-wrap">
+  <div class="list-header">
+    <div class="list-title">Extrato</div>
+    <button class="btn-clear" onclick="clearAll()">Limpar tudo</button>
+  </div>
+  <ul id="transaction-list"></ul>
+</div>
+
+<script>
+  let transactions = JSON.parse(localStorage.getItem('caixa_txs') || '[]');
+  let filter = 'todos';
+
+  // Date badge
+  const now = new Date();
+  document.getElementById('date-badge').textContent =
+    now.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+
+  function fmt(n) {
+    return 'R$ ' + n.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+
+  function save() { localStorage.setItem('caixa_txs', JSON.stringify(transactions)); }
+
+  function addTransaction() {
+    const desc  = document.getElementById('desc').value.trim();
+    const valor = parseFloat(document.getElementById('valor').value);
+    const tipo  = document.getElementById('tipo').value;
+
+    if (!desc) { shake('desc'); return; }
+    if (!valor || valor <= 0) { shake('valor'); return; }
+
+    transactions.unshift({ id: Date.now(), desc, valor, tipo, date: new Date().toLocaleString('pt-BR') });
+    save();
+    render();
+
+    document.getElementById('desc').value = '';
+    document.getElementById('valor').value = '';
+  }
+
+  function deleteTransaction(id) {
+    transactions = transactions.filter(t => t.id !== id);
+    save();
+    render();
+  }
+
+  function clearAll() {
+    if (transactions.length === 0) return;
+    if (confirm('Deseja limpar todas as transações?')) {
+      transactions = [];
+      save();
+      render();
+    }
+  }
+
+  function setFilter(f, btn) {
+    filter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  }
+
+  function shake(id) {
+    const el = document.getElementById(id);
+    el.style.borderColor = 'var(--red)';
+    el.style.boxShadow = '0 0 0 3px var(--red-glow)';
+    el.animate([
+      { transform: 'translateX(-4px)' },
+      { transform: 'translateX(4px)' },
+      { transform: 'translateX(-3px)' },
+      { transform: 'translateX(0)' }
+    ], { duration: 300, easing: 'ease' }).onfinish = () => {
+      el.style.borderColor = '';
+      el.style.boxShadow = '';
+    };
+  }
+
+  function render() {
+    const entrada = transactions.filter(t => t.tipo === 'entrada').reduce((s, t) => s + t.valor, 0);
+    const saida   = transactions.filter(t => t.tipo === 'saida').reduce((s, t) => s + t.valor, 0);
+    const saldo   = entrada - saida;
+
+    document.getElementById('total-entrada').textContent = fmt(entrada);
+    document.getElementById('total-saida').textContent   = fmt(saida);
+    const saldoEl = document.getElementById('saldo');
+    saldoEl.textContent = fmt(Math.abs(saldo));
+    const wrapEl = document.getElementById('saldo-wrap');
+    wrapEl.querySelector('.card-dot').style.background = saldo >= 0 ? 'var(--accent)' : 'var(--red)';
+    saldoEl.style.color = saldo >= 0 ? 'var(--accent)' : 'var(--red)';
+    if (saldo < 0) saldoEl.textContent = '−' + fmt(Math.abs(saldo));
+
+    const filtered = filter === 'todos' ? transactions : transactions.filter(t => t.tipo === filter);
+    const ul = document.getElementById('transaction-list');
+
+    if (filtered.length === 0) {
+      ul.innerHTML = `<li class="empty-state"><span class="empty-icon">⬡</span>Nenhuma transação encontrada.</li>`;
+      return;
+    }
+
+    ul.innerHTML = filtered.map(t => `
+      <li class="tx-item">
+        <div class="tx-badge ${t.tipo}">${t.tipo === 'entrada' ? '↑' : '↓'}</div>
+        <div>
+          <div class="tx-desc">${t.desc}</div>
+          <div class="tx-meta">${t.date}</div>
+        </div>
+        <div class="tx-amount ${t.tipo}">${t.tipo === 'entrada' ? '+' : '−'} ${fmt(t.valor)}</div>
+        <button class="btn-del" onclick="deleteTransaction(${t.id})" title="Remover">✕</button>
+      </li>
+    `).join('');
+  }
+
+  // Enter key support
+  document.getElementById('desc').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('valor').focus(); });
+  document.getElementById('valor').addEventListener('keydown', e => { if (e.key === 'Enter') addTransaction(); });
+
+  render();
+</script>
+</body>
+        </html>
